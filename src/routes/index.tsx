@@ -2,6 +2,7 @@ import { createBrowserRouter, RouterProvider } from 'react-router-dom'
 import { AuthGuard } from './AuthGuard'
 import { RoleGuard } from './RoleGuard'
 import { AppShell } from '@/components/layout/AppShell'
+import LoginPage from '@/pages/LoginPage'
 import DashboardPage from '@/pages/DashboardPage'
 import ProductsPage from '@/pages/ProductsPage'
 import InventoryPage from '@/pages/InventoryPage'
@@ -13,6 +14,8 @@ import ReportsPage from '@/pages/ReportsPage'
 import SettingsPage from '@/pages/SettingsPage'
 
 const router = createBrowserRouter([
+  // Public: admin login page
+  { path: '/login', element: <LoginPage /> },
   {
     // All authenticated routes
     element: <AuthGuard />,
