@@ -1,7 +1,7 @@
 import type { ApiError } from '@/types/api'
+import { tokenStore } from '@/hooks/useAuth'
 
 const BASE = import.meta.env.VITE_API_URL ?? 'http://localhost:5000'
-const STOREFRONT_URL = import.meta.env.VITE_STOREFRONT_URL ?? 'http://localhost:3000'
 
 class HttpError extends Error {
   status: number
@@ -22,11 +22,13 @@ export async function apiFetch<T>(
 ): Promise<T> {
   const url = `${BASE}${path}`
 
+  const token = tokenStore.get()
   const res = await fetch(url, {
-    credentials: 'include',           // always send the httpOnly session cookie
+    credentials: 'include',           // send cookie if available (same-origin / dev)
     headers: {
       'Content-Type': 'application/json',
       'X-Requested-With': 'snifftok-admin',   // CSRF sentinel
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
       ...init.headers,
     },
     ...init,

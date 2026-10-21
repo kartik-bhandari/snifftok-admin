@@ -3,7 +3,15 @@ import { getMe, login, logout } from '@/api/auth'
 import type { AdminUser } from '@/types/api'
 import type { LoginCredentials } from '@/api/auth'
 
-const ME_KEY = ['auth', 'me'] as const
+const ME_KEY  = ['auth', 'me'] as const
+const TOKEN_KEY = 'snifftok_admin_token'
+
+/** Token store — used by apiFetch to send Authorization: Bearer */
+export const tokenStore = {
+  get: ()    => sessionStorage.getItem(TOKEN_KEY) ?? '',
+  set: (t: string) => sessionStorage.setItem(TOKEN_KEY, t),
+  clear: ()  => sessionStorage.removeItem(TOKEN_KEY),
+}
 
 export function useAuth() {
   const qc = useQueryClient()
@@ -18,6 +26,7 @@ export function useAuth() {
   const loginMutation = useMutation({
     mutationFn: (creds: LoginCredentials) => login(creds),
     onSuccess: (res) => {
+      if (res.token) tokenStore.set(res.token)   // store for Bearer auth
       qc.setQueryData(ME_KEY, res)
     },
   })
@@ -25,6 +34,7 @@ export function useAuth() {
   const logoutMutation = useMutation({
     mutationFn: logout,
     onSuccess: () => {
+      tokenStore.clear()                         // clear stored token
       qc.setQueryData(ME_KEY, { user: null })
       qc.clear()
     },
