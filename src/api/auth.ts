@@ -6,8 +6,8 @@ export interface LoginCredentials {
   password: string
 }
 
-export async function login(creds: LoginCredentials): Promise<{ user: AdminUser }> {
-  return apiPost<{ user: AdminUser }>('/api/auth/login', creds)
+export async function login(creds: LoginCredentials): Promise<{ user: AdminUser; token?: string }> {
+  return apiPost<{ user: AdminUser; token?: string }>('/api/auth/login', creds)
 }
 
 export async function logout(): Promise<void> {
