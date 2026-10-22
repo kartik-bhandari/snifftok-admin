@@ -9,33 +9,25 @@ export function CategorySelect() {
   const { setValue, formState: { errors } } = useFormContext()
   const value = useWatch({ name: 'categoryId' })
   const { data, isLoading } = useCategories()
-  const [open, setOpen]     = useState(false)
-  const [rect, setRect]     = useState<DOMRect | null>(null)
-  const buttonRef   = useRef<HTMLButtonElement>(null)
-  const dropdownRef = useRef<HTMLDivElement>(null)   // tracks the portal div
+  const [open, setOpen] = useState(false)
+  const [rect, setRect] = useState<DOMRect | null>(null)
+  const buttonRef = useRef<HTMLButtonElement>(null)
 
   const categories = data?.categories ?? []
-  const selected = categories.find(c => c._id === value)
+  const selected   = categories.find(c => c._id === value)
 
+  // Recompute position whenever the dropdown opens
   useEffect(() => {
     if (open && buttonRef.current) setRect(buttonRef.current.getBoundingClientRect())
   }, [open])
 
+  // Close on scroll / resize so the fixed dropdown doesn't detach
   useEffect(() => {
     if (!open) return
     const close = () => setOpen(false)
-    const mouseHandler = (e: MouseEvent) => {
-      const target = e.target as Node
-      // Don't close when clicking the toggle button OR inside the portal dropdown
-      if (buttonRef.current?.contains(target)) return
-      if (dropdownRef.current?.contains(target)) return
-      close()
-    }
-    document.addEventListener('mousedown', mouseHandler)
     window.addEventListener('scroll', close, true)
     window.addEventListener('resize', close)
     return () => {
-      document.removeEventListener('mousedown', mouseHandler)
       window.removeEventListener('scroll', close, true)
       window.removeEventListener('resize', close)
     }
@@ -63,34 +55,44 @@ export function CategorySelect() {
         <ChevronDown className="h-4 w-4 text-muted-foreground" />
       </button>
 
-      {open && rect && createPortal(
-        <div
-          ref={dropdownRef}
-          style={{
-            position: 'fixed',
-            top:   rect.bottom + 4,
-            left:  rect.left,
-            width: rect.width,
-            zIndex: 9999,
-            backgroundColor: 'hsl(var(--card))',
-          }}
-          className="border border-border rounded-xl shadow-2xl overflow-hidden max-h-64 flex flex-col"
-        >
-          <div className="overflow-y-auto flex-1">
-            {categories.map(cat => (
-              <button
-                key={cat._id}
-                type="button"
-                onMouseDown={e => e.stopPropagation()} // prevent outside-click from firing
-                onClick={() => handleSelect(cat._id)}
-                className="w-full flex items-center justify-between px-4 py-2.5 text-sm hover:bg-accent transition-colors text-left"
-              >
-                {cat.name}
-                {cat._id === value && <Check className="h-4 w-4 text-primary" />}
-              </button>
-            ))}
-          </div>
-        </div>,
+      {open && createPortal(
+        <>
+          {/* Full-screen backdrop — clicking outside closes the dropdown */}
+          <div
+            className="fixed inset-0"
+            style={{ zIndex: 9998 }}
+            onClick={() => setOpen(false)}
+          />
+
+          {/* Dropdown — rendered above backdrop */}
+          {rect && (
+            <div
+              style={{
+                position: 'fixed',
+                top:   rect.bottom + 4,
+                left:  rect.left,
+                width: rect.width,
+                zIndex: 9999,
+                backgroundColor: 'hsl(var(--card))',
+              }}
+              className="border border-border rounded-xl shadow-2xl overflow-hidden max-h-64"
+            >
+              <div className="overflow-y-auto max-h-64">
+                {categories.map(cat => (
+                  <button
+                    key={cat._id}
+                    type="button"
+                    onClick={() => handleSelect(cat._id)}
+                    className="w-full flex items-center justify-between px-4 py-2.5 text-sm hover:bg-accent transition-colors text-left"
+                  >
+                    {cat.name}
+                    {cat._id === value && <Check className="h-4 w-4 text-primary shrink-0" />}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+        </>,
         document.body,
       )}
 
