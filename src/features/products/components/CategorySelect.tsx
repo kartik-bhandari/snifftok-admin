@@ -11,7 +11,8 @@ export function CategorySelect() {
   const { data, isLoading } = useCategories()
   const [open, setOpen]     = useState(false)
   const [rect, setRect]     = useState<DOMRect | null>(null)
-  const buttonRef = useRef<HTMLButtonElement>(null)
+  const buttonRef   = useRef<HTMLButtonElement>(null)
+  const dropdownRef = useRef<HTMLDivElement>(null)   // tracks the portal div
 
   const categories = data?.categories ?? []
   const selected = categories.find(c => c._id === value)
@@ -24,10 +25,13 @@ export function CategorySelect() {
     if (!open) return
     const close = () => setOpen(false)
     const mouseHandler = (e: MouseEvent) => {
-      if (!buttonRef.current?.contains(e.target as Node)) close()
+      const target = e.target as Node
+      // Don't close when clicking the toggle button OR inside the portal dropdown
+      if (buttonRef.current?.contains(target)) return
+      if (dropdownRef.current?.contains(target)) return
+      close()
     }
     document.addEventListener('mousedown', mouseHandler)
-    // Close on any scroll or resize so the fixed dropdown doesn't detach from the button
     window.addEventListener('scroll', close, true)
     window.addEventListener('resize', close)
     return () => {
@@ -61,6 +65,7 @@ export function CategorySelect() {
 
       {open && rect && createPortal(
         <div
+          ref={dropdownRef}
           style={{
             position: 'fixed',
             top:   rect.bottom + 4,
@@ -76,6 +81,7 @@ export function CategorySelect() {
               <button
                 key={cat._id}
                 type="button"
+                onMouseDown={e => e.stopPropagation()} // prevent outside-click from firing
                 onClick={() => handleSelect(cat._id)}
                 className="w-full flex items-center justify-between px-4 py-2.5 text-sm hover:bg-accent transition-colors text-left"
               >
