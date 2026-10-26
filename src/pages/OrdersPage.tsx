@@ -179,7 +179,7 @@ function OrderDetailSheet({ order, onClose }: { order: Order; onClose: () => voi
                 <div key={i} className="px-4 py-3 flex items-center justify-between gap-3">
                   <div>
                     <p className="text-sm font-semibold capitalize">{item.name}</p>
-                    <p className="text-xs text-muted-foreground capitalize">{item.variantType} · {item.sizeMl}ml × {item.quantity}</p>
+                    <p className="text-xs text-muted-foreground capitalize">{item.variantType === 'tester' ? 'Decant' : 'Bottle'} · {item.sizeMl}ml × {item.quantity}</p>
                   </div>
                   <p className="text-sm font-semibold shrink-0">{fmt(item.lineTotal)}</p>
                 </div>
