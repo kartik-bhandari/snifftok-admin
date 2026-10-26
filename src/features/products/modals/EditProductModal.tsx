@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
-import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet'
+import { Sheet, SheetContent } from '@/components/ui/sheet'
 import { useMediaQuery } from '@/hooks/useMediaQuery'
 import { ProductForm } from '../forms/ProductForm'
 import { useUpdateProduct, useProduct } from '@/hooks/useProducts'
@@ -82,12 +82,15 @@ export function EditProductModal({ productId, open, onClose }: Props) {
 
   if (isMobile) {
     return (
-      <Sheet open={open} onOpenChange={(v: boolean) => !v && onClose()}>
-        <SheetContent side="bottom" className="h-[92dvh] rounded-t-2xl">
-          <SheetHeader>
-            <SheetTitle>{title}</SheetTitle>
-          </SheetHeader>
-          <div className="px-4 pb-6">
+      // dismissible={false}: no accidental close from tapping overlay or dragging
+      <Sheet open={open} onOpenChange={() => {}} dismissible={false}>
+        <SheetContent
+          side="bottom"
+          className="h-[92dvh] rounded-t-2xl"
+          title={title}
+          onClose={onClose}
+        >
+          <div className="px-4 pt-2 pb-6">
             {inner}
           </div>
         </SheetContent>

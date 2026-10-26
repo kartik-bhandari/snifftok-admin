@@ -1,5 +1,5 @@
+import { Sheet, SheetContent } from '@/components/ui/sheet'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
-import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet'
 import { useMediaQuery } from '@/hooks/useMediaQuery'
 import { ProductForm } from '../forms/ProductForm'
 import { useCreateProduct } from '@/hooks/useProducts'
@@ -39,12 +39,16 @@ export function CreateProductModal({ open, onClose }: Props) {
 
   if (isMobile) {
     return (
-      <Sheet open={open} onOpenChange={(v: boolean) => !v && onClose()}>
-        <SheetContent side="bottom" className="h-[92dvh] rounded-t-2xl">
-          <SheetHeader>
-            <SheetTitle>Create Product</SheetTitle>
-          </SheetHeader>
-          <div className="px-4 pb-6">
+      // dismissible={false}: overlay taps and drags do NOT close the sheet.
+      // The user must use the ✕ button or the Cancel / Create buttons inside the form.
+      <Sheet open={open} onOpenChange={() => {}} dismissible={false}>
+        <SheetContent
+          side="bottom"
+          className="h-[92dvh] rounded-t-2xl"
+          title="Create Product"
+          onClose={onClose}
+        >
+          <div className="px-4 pt-2 pb-6">
             {content}
           </div>
         </SheetContent>

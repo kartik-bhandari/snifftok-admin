@@ -257,7 +257,8 @@ export function ProductForm({ mode, product, onSubmit, onCancel, isSubmitting }:
         </button>
 
         {/* ── Footer ───────────────────────────────────────────────── */}
-        <div className="flex gap-3 pt-4 border-t mt-2 pb-4">
+        {/* sticky: always visible even when keyboard is open on mobile */}
+        <div className="sticky bottom-0 bg-background flex gap-3 pt-4 pb-4 border-t mt-2 -mx-0">
           <button
             type="button"
             onClick={handleCancel}
