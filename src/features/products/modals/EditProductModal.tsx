@@ -85,8 +85,6 @@ export function EditProductModal({ productId, open, onClose }: Props) {
       // dismissible={false}: no accidental close from tapping overlay or dragging
       <Sheet open={open} onOpenChange={() => {}} dismissible={false}>
         <SheetContent
-          side="bottom"
-          className="h-[92dvh] rounded-t-2xl"
           title={title}
           onClose={onClose}
         >

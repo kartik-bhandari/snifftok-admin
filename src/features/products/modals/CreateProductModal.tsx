@@ -43,8 +43,6 @@ export function CreateProductModal({ open, onClose }: Props) {
       // The user must use the ✕ button or the Cancel / Create buttons inside the form.
       <Sheet open={open} onOpenChange={() => {}} dismissible={false}>
         <SheetContent
-          side="bottom"
-          className="h-[92dvh] rounded-t-2xl"
           title="Create Product"
           onClose={onClose}
         >
