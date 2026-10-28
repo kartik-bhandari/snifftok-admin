@@ -12,8 +12,16 @@ export default function LoginPage() {
   const [showPass, setShowPass] = useState(false)
   const [error, setError]       = useState('')
 
-  // Already authenticated → go to destination
-  if (!authLoading && isAuthenticated) return <Navigate to={from} replace />
+  // Only admin/staff go through. A customer session (e.g. the storefront cookie,
+  // which is shared across ports on localhost) must stay here — AuthGuard would
+  // send it straight back and the two redirects would loop forever.
+  // (AdminRole has no 'customer', but /me can still return one — same cast as AuthGuard)
+  const isStaffSession = isAuthenticated && (user?.role as string) !== 'customer'
+  if (!authLoading && isStaffSession) return <Navigate to={from} replace />
+
+  const customerNotice = isAuthenticated && !isStaffSession
+    ? `You're signed in as a customer (${user?.email}). Sign in with an admin or staff account to continue.`
+    : null
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) =>
     setForm(f => ({ ...f, [e.target.name]: e.target.value }))
@@ -40,6 +48,12 @@ export default function LoginPage() {
 
         <div className="bg-card border border-border rounded-2xl p-6 shadow-sm">
           <form onSubmit={handleSubmit} className="space-y-4">
+            {customerNotice && !error && (
+              <div className="flex items-start gap-2 bg-muted border border-border text-foreground text-xs px-3 py-2.5 rounded-xl">
+                <AlertCircle className="h-3.5 w-3.5 shrink-0 mt-px" />
+                {customerNotice}
+              </div>
+            )}
             {error && (
               <div className="flex items-center gap-2 bg-destructive/10 border border-destructive/20 text-destructive text-xs px-3 py-2.5 rounded-xl">
                 <AlertCircle className="h-3.5 w-3.5 shrink-0" />
