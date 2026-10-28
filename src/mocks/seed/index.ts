@@ -283,14 +283,27 @@ export const MOCK_CUSTOMERS: Customer[] = [
 
 // ─── Dashboard seed ───────────────────────────────────────────────────────────
 
+/** Mock chart points — IST keys: "YYYY-MM-DD" per day, or "YYYY-MM-DDTHH" per hour for today */
 export function generateChartData(days: number) {
+  const IST = 330 * 60 * 1000
+  const now = new Date(Date.now() + IST)
   const data = []
+  if (days === 1) {
+    for (let h = 0; h <= now.getUTCHours(); h++) {
+      const revenue = Math.random() < 0.4 ? 0 : Math.floor(Math.random() * 60000) + 20000
+      data.push({
+        date: `${now.toISOString().slice(0, 10)}T${String(h).padStart(2, '0')}`,
+        revenue,
+        netProfit: Math.floor(revenue * (0.08 + Math.random() * 0.05)),
+      })
+    }
+    return data
+  }
   for (let i = days - 1; i >= 0; i--) {
-    const date = new Date()
-    date.setDate(date.getDate() - i)
+    const date = new Date(now.getTime() - i * 24 * 60 * 60 * 1000)
     const revenue = Math.floor(Math.random() * 500000) + 100000
     data.push({
-      date: date.toISOString().split('T')[0],
+      date: date.toISOString().slice(0, 10),
       revenue,
       netProfit: Math.floor(revenue * (0.08 + Math.random() * 0.05)),
     })

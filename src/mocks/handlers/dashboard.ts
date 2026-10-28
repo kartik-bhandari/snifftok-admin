@@ -4,30 +4,44 @@ import { MOCK_SETTINGS, MOCK_PRODUCTS, generateChartData, MOCK_CUSTOMERS } from 
 const latency = () => delay(Math.floor(Math.random() * 250) + 150)
 
 export const dashboardHandlers = [
-  // GET /api/admin/dashboard/summary
+  // GET /api/admin/dashboard/summary — same shape as the real API
   http.get('*/api/admin/dashboard/summary', async ({ request }) => {
     await latency()
     const url = new URL(request.url)
-    const period = url.searchParams.get('period') ?? '7d'
+    const raw = url.searchParams.get('period')
+    const period = raw === 'today' || raw === '30d' ? raw : '7d'
     const days = period === 'today' ? 1 : period === '7d' ? 7 : 30
 
+    const totals = (chartData: ReturnType<typeof generateChartData>) => {
+      const revenue = chartData.reduce((s, d) => s + d.revenue, 0)
+      const netProfit = chartData.reduce((s, d) => s + d.netProfit, 0)
+      const orders = Math.floor(revenue / 350000)
+      return { revenue, netProfit, orders, aov: Math.floor(revenue / (orders || 1)), unitsSold: orders + 3 }
+    }
+
     const chartData = generateChartData(days)
-    const revenue = chartData.reduce((s, d) => s + d.revenue, 0)
-    const netProfit = chartData.reduce((s, d) => s + d.netProfit, 0)
-    const orders = Math.floor(revenue / 350000)
+    const current = totals(chartData)
 
     return HttpResponse.json({
-      revenue,
-      netProfit,
-      orders,
-      aov: Math.floor(revenue / (orders || 1)),
-      unitsSold: orders + Math.floor(Math.random() * 10),
+      period,
+      bucket: period === 'today' ? 'hour' : 'day',
+      ...current,
+      profitMissingCost: 0,
       byChannel: {
-        web: Math.floor(orders * 0.6),
-        whatsapp: Math.floor(orders * 0.3),
-        admin: Math.floor(orders * 0.1),
+        web: Math.floor(current.orders * 0.6),
+        whatsapp: Math.floor(current.orders * 0.3),
+        admin: Math.floor(current.orders * 0.1),
       },
       chartData,
+      previous: totals(generateChartData(days)),
+      topProducts: MOCK_PRODUCTS.slice(0, 5).map((p, i) => ({
+        productId: p._id,
+        name: p.name,
+        brand: p.brand ?? null,
+        image: p.images?.[0]?.url ?? null,
+        unitsSold: 12 - i * 2,
+        revenue: (12 - i * 2) * 450000,
+      })),
     })
   }),
 
@@ -36,11 +50,11 @@ export const dashboardHandlers = [
     await latency()
     return HttpResponse.json({
       items: [
-        { type: 'order_awaiting', orderId: 'ord_005', orderNumber: 'SNF-00005', message: 'Awaiting customer details — placed 30 min ago', expiresAt: new Date(Date.now() + 23.5 * 60 * 60 * 1000).toISOString() },
-        { type: 'order_expiring', orderId: 'ord_002', orderNumber: 'SNF-00002', message: 'Payment reservation expires in 3 hours', expiresAt: new Date(Date.now() + 3 * 60 * 60 * 1000).toISOString() },
-        { type: 'low_stock', sku: 'TAB-2-TST', variantLabel: 'Tobacco Amber 2ml Tester', availableStock: 2, message: 'Only 2 units available' },
-        { type: 'low_stock', sku: 'SNT-2-TST', variantLabel: 'Santal Mystique 2ml Tester', availableStock: 3, message: 'Only 3 units available' },
-      ]
+        { type: 'order_pending', orderId: 'ord_005', orderNumber: 'SNF-00005', customerName: 'Riya Shah', total: 650000, createdAt: new Date(Date.now() - 30 * 60 * 1000).toISOString(), message: 'Waiting to be confirmed' },
+        { type: 'order_pending', orderId: 'ord_002', orderNumber: 'SNF-00002', customerName: 'Rahul Gupta', total: 500400, createdAt: new Date(Date.now() - 5 * 60 * 60 * 1000).toISOString(), message: 'Waiting to be confirmed' },
+        { type: 'low_stock', sku: 'TAB-2-TST', variantLabel: 'Tobacco Amber 2ml Tester', availableStock: 0, reorderLevel: 3, message: 'Out of stock' },
+        { type: 'low_stock', sku: 'SNT-2-TST', variantLabel: 'Santal Mystique 2ml Tester', availableStock: 3, reorderLevel: 3, message: 'Only 3 left' },
+      ],
     })
   }),
 

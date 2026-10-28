@@ -240,31 +240,53 @@ export interface Customer {
 
 export type DashboardPeriod = 'today' | '7d' | '30d'
 
-export interface DashboardSummary {
+export interface DashboardTotals {
   revenue: number           // paise
-  netProfit: number         // paise
+  netProfit: number | null  // paise — null for staff (admin-only)
   orders: number
   aov: number               // paise
   unitsSold: number
+}
+
+export interface DashboardSummary extends DashboardTotals {
+  period: DashboardPeriod
+  bucket: 'hour' | 'day'
+  /** Order lines whose cost price couldn't be found — left out of profit */
+  profitMissingCost: number
   byChannel: {
     web: number
     whatsapp: number
     admin: number
   }
   chartData: Array<{
-    date: string
+    date: string              // IST — "2026-10-28" (day) or "2026-10-28T14" (hour)
     revenue: number
-    netProfit: number
+    netProfit: number | null
+  }>
+  /** Same-length period just before, up to the same point in time */
+  previous: DashboardTotals
+  topProducts: Array<{
+    productId: string | null
+    name: string
+    brand: string | null
+    image: string | null
+    unitsSold: number
+    revenue: number           // paise
   }>
 }
 
 export interface AttentionItem {
-  type: 'order_awaiting' | 'order_expiring' | 'low_stock' | 'failed_notification'
+  type: 'order_pending' | 'order_awaiting' | 'order_expiring' | 'low_stock' | 'failed_notification'
   orderId?: string
   orderNumber?: string
+  customerName?: string
+  total?: number            // paise
+  createdAt?: string
+  productId?: string
   sku?: string
   variantLabel?: string
   availableStock?: number
+  reorderLevel?: number
   expiresAt?: string
   message: string
 }

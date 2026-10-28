@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import {
   Search, Filter, Package, ShoppingBag, ChevronDown,
@@ -6,6 +7,7 @@ import {
 } from 'lucide-react'
 import { apiFetch, apiPatch } from '@/api/client'
 import { cn } from '@/lib/utils'
+import { DASHBOARD_KEY } from '@/hooks/useDashboard'
 
 // ── Types ──────────────────────────────────────────────────────────────────────
 interface OrderItem {
@@ -108,7 +110,10 @@ function OrderDetailSheet({ order, onClose }: { order: Order; onClose: () => voi
 
   const updateStatus = useMutation({
     mutationFn: (s: string) => apiPatch(`/api/admin/orders/${order._id}/status`, { status: s }),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['admin-orders'] }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['admin-orders'] })
+      qc.invalidateQueries({ queryKey: [DASHBOARD_KEY] })
+    },
   })
 
   return (
@@ -285,10 +290,28 @@ const fetchOrders = (page: number, status: string, search: string) =>
 
 // ── Main page ─────────────────────────────────────────────────────────────────
 export default function OrdersPage() {
+  const { id: routeId }         = useParams()
+  const [searchParams]          = useSearchParams()
+  const navigate                = useNavigate()
   const [page, setPage]         = useState(1)
-  const [status, setStatus]     = useState('')
+  const [status, setStatus]     = useState(() => {
+    const s = searchParams.get('status') ?? ''
+    return ALL_STATUSES.includes(s) ? s : ''
+  })
   const [search, setSearch]     = useState('')
   const [selected, setSelected] = useState<Order | null>(null)
+
+  // /orders/:id — open that order directly (e.g. linked from the dashboard)
+  const { data: routeOrder } = useQuery({
+    queryKey: ['admin-orders', 'one', routeId],
+    queryFn:  () => apiFetch<Order>(`/api/admin/orders/${routeId}`),
+    enabled:  !!routeId,
+  })
+  const detail = selected ?? (routeId ? routeOrder ?? null : null)
+  const closeDetail = () => {
+    setSelected(null)
+    if (routeId) navigate('/orders', { replace: true })
+  }
 
   const { data, isLoading, isError } = useQuery({
     queryKey: ['admin-orders', page, status, search],
@@ -394,8 +417,8 @@ export default function OrdersPage() {
         </>
       )}
 
-      {selected && (
-        <OrderDetailSheet order={selected} onClose={() => setSelected(null)} />
+      {detail && (
+        <OrderDetailSheet order={detail} onClose={closeDetail} />
       )}
     </div>
   )

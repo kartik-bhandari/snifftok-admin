@@ -17,6 +17,20 @@ export function formatMoney(paise: number): string {
   return formatter.format(paise / 100)
 }
 
+const compactFormatter = new Intl.NumberFormat('en-IN', {
+  style: 'currency',
+  currency: 'INR',
+  notation: 'compact',
+  maximumFractionDigits: 1,
+})
+
+/**
+ * Short form for chart axes — 1234500 → "₹12.3K", 250000000 → "₹25L"
+ */
+export function formatMoneyCompact(paise: number): string {
+  return compactFormatter.format(paise / 100)
+}
+
 /**
  * Format with explicit sign — for profit/loss displays
  * e.g.  30013 → "+₹300"   -5000 → "-₹50"
