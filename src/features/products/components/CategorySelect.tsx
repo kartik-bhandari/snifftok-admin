@@ -9,6 +9,7 @@ export function CategorySelect() {
   const { data, isLoading } = useCategories()
 
   const categories = data?.categories ?? []
+  const selected = categories.find(c => c._id === value)
 
   return (
     <div className="relative">
@@ -26,7 +27,7 @@ export function CategorySelect() {
         </option>
         {categories.map(cat => (
           <option key={cat._id} value={cat._id}>
-            {cat.name}
+            {cat.name}{cat.aka ? ` (${cat.aka})` : ''}
           </option>
         ))}
       </select>
@@ -34,9 +35,11 @@ export function CategorySelect() {
       {/* Custom chevron icon */}
       <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
 
-      {errors.categoryId && (
+      {errors.categoryId ? (
         <p className="text-xs text-destructive mt-1">{String(errors.categoryId.message)}</p>
-      )}
+      ) : selected?.smellsLike ? (
+        <p className="text-xs text-muted-foreground mt-1">{selected.smellsLike}</p>
+      ) : null}
     </div>
   )
 }
