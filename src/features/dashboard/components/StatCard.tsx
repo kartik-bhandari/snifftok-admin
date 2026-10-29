@@ -5,9 +5,9 @@ import { cn } from '@/lib/utils'
 interface Props {
   label: string
   value: ReactNode
-  /** Current and previous raw values — used for the change indicator */
+  /** Current and previous raw values — used for the change indicator. null = no comparison (lifetime) */
   current: number
-  previous: number
+  previous: number | null
   /** Text after the change, e.g. "vs previous 7 days" */
   compareLabel: string
   hint?: ReactNode
@@ -17,9 +17,9 @@ export function StatCard({ label, value, current, previous, compareLabel, hint }
   return (
     <div className="bg-card rounded-2xl border border-border p-4">
       <p className="text-xs font-medium text-muted-foreground">{label}</p>
-      <p className="text-2xl font-bold tabular-nums mt-1.5 truncate">{value}</p>
+      <p className="text-xl sm:text-2xl font-bold tabular-nums mt-1.5 truncate">{value}</p>
       <div className="mt-1.5 flex items-center gap-1 text-[11px] text-muted-foreground min-w-0">
-        <Change current={current} previous={previous} />
+        {previous != null && <Change current={current} previous={previous} />}
         <span className="truncate">{compareLabel}</span>
       </div>
       {hint && <p className="mt-1 text-[11px] text-muted-foreground">{hint}</p>}

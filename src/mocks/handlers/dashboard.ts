@@ -1,5 +1,5 @@
 import { http, HttpResponse, delay } from 'msw'
-import { MOCK_SETTINGS, MOCK_PRODUCTS, generateChartData, MOCK_CUSTOMERS } from '../seed'
+import { MOCK_SETTINGS, MOCK_PRODUCTS, generateChartData, generateMonthlyChartData, MOCK_CUSTOMERS } from '../seed'
 
 const latency = () => delay(Math.floor(Math.random() * 250) + 150)
 
@@ -9,8 +9,10 @@ export const dashboardHandlers = [
     await latency()
     const url = new URL(request.url)
     const raw = url.searchParams.get('period')
-    const period = raw === 'today' || raw === '30d' ? raw : '7d'
+    const period = raw === 'today' || raw === '30d' || raw === 'fy' || raw === 'lifetime' ? raw : '7d'
     const days = period === 'today' ? 1 : period === '7d' ? 7 : 30
+    const monthly = period === 'fy' || period === 'lifetime'
+    const months = period === 'fy' ? ((new Date().getMonth() + 9) % 12) + 1 : 18   // April → 1 month
 
     const totals = (chartData: ReturnType<typeof generateChartData>) => {
       const revenue = chartData.reduce((s, d) => s + d.revenue, 0)
@@ -19,12 +21,15 @@ export const dashboardHandlers = [
       return { revenue, netProfit, orders, aov: Math.floor(revenue / (orders || 1)), unitsSold: orders + 3 }
     }
 
-    const chartData = generateChartData(days)
+    const chart = () => (monthly ? generateMonthlyChartData(months) : generateChartData(days))
+    const chartData = chart()
     const current = totals(chartData)
 
     return HttpResponse.json({
       period,
-      bucket: period === 'today' ? 'hour' : 'day',
+      bucket: period === 'today' ? 'hour' : monthly ? 'month' : 'day',
+      label: period === 'fy' ? 'FY 2026–27' : null,
+      rangeStart: `${chartData[0].date.slice(0, 7)}-01T00:00:00+05:30`,
       ...current,
       profitMissingCost: 0,
       byChannel: {
@@ -33,7 +38,7 @@ export const dashboardHandlers = [
         admin: Math.floor(current.orders * 0.1),
       },
       chartData,
-      previous: totals(generateChartData(days)),
+      previous: period === 'lifetime' ? null : totals(chart()),
       topProducts: MOCK_PRODUCTS.slice(0, 5).map((p, i) => ({
         productId: p._id,
         name: p.name,

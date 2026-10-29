@@ -68,7 +68,7 @@ export const MOCK_PRODUCTS: Product[] = [
     name: 'Oud Royale',
     slug: 'oud-royale',
     brand: 'Lattafa',
-    categoryId: 'cat_oud',
+    categoryId: 'cat_woody',
     description: 'Rich oud with deep woody base notes. A bestseller for evenings.',
     notes: { top: ['Bergamot', 'Saffron'], heart: ['Rose', 'Oud'], base: ['Amber', 'Musk'] },
     concentration: 'EDP',
@@ -95,7 +95,7 @@ export const MOCK_PRODUCTS: Product[] = [
     name: 'Santal Mystique',
     slug: 'santal-mystique',
     brand: 'Maison Margiela',
-    categoryId: 'cat_unisex',
+    categoryId: 'cat_fresh',
     description: 'Creamy sandalwood with a hint of vanilla.',
     notes: { top: ['Pink Pepper'], heart: ['Sandalwood', 'Iris'], base: ['Vanilla', 'Cedarwood'] },
     concentration: 'EDT',
@@ -122,7 +122,7 @@ export const MOCK_PRODUCTS: Product[] = [
     name: 'Rose Elixir',
     slug: 'rose-elixir',
     brand: 'Initio',
-    categoryId: 'cat_women',
+    categoryId: 'cat_floral',
     description: 'A modern take on the classic rose fragrance with a spicy twist.',
     notes: { top: ['Lychee', 'Rose'], heart: ['Peony', 'Patchouli'], base: ['White Musk', 'Sandalwood'] },
     concentration: 'EDP',
@@ -144,7 +144,7 @@ export const MOCK_PRODUCTS: Product[] = [
     name: 'Tobacco Amber',
     slug: 'tobacco-amber',
     brand: 'Tom Ford',
-    categoryId: 'cat_men',
+    categoryId: 'cat_amber',
     description: 'Bold tobacco and amber. Statement fragrance for confident personalities.',
     notes: { top: ['Cardamom', 'Black Pepper'], heart: ['Tobacco', 'Honey'], base: ['Amber', 'Leather'] },
     concentration: 'Extrait',
@@ -282,6 +282,23 @@ export const MOCK_CUSTOMERS: Customer[] = [
 ]
 
 // ─── Dashboard seed ───────────────────────────────────────────────────────────
+
+/** Mock monthly chart points — IST keys "YYYY-MM", oldest first */
+export function generateMonthlyChartData(months: number) {
+  const IST = 330 * 60 * 1000
+  const now = new Date(Date.now() + IST)
+  const data = []
+  for (let i = months - 1; i >= 0; i--) {
+    const d = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() - i, 1))
+    const revenue = Math.floor(Math.random() * 8000000) + 2000000
+    data.push({
+      date: d.toISOString().slice(0, 7),
+      revenue,
+      netProfit: Math.floor(revenue * (0.08 + Math.random() * 0.05)),
+    })
+  }
+  return data
+}
 
 /** Mock chart points — IST keys: "YYYY-MM-DD" per day, or "YYYY-MM-DDTHH" per hour for today */
 export function generateChartData(days: number) {

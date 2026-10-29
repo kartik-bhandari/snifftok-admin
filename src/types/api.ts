@@ -13,11 +13,18 @@ export interface AdminUser {
   createdAt: string
 }
 
+/** One of the 5 scent families (Floral, Amber, Woody, Fresh, Gourmand) */
 export interface Category {
   _id: string
   name: string
   slug: string
   isActive: boolean
+  sortOrder?: number
+  aka?: string
+  smellsLike?: string
+  notes?: string[]
+  subfamilies?: string[]
+  bestFor?: string
   createdAt: string
 }
 
@@ -238,7 +245,7 @@ export interface Customer {
 
 // ─── Dashboard ───────────────────────────────────────────────────────────────
 
-export type DashboardPeriod = 'today' | '7d' | '30d'
+export type DashboardPeriod = 'today' | '7d' | '30d' | 'fy' | 'lifetime'
 
 export interface DashboardTotals {
   revenue: number           // paise
@@ -250,7 +257,11 @@ export interface DashboardTotals {
 
 export interface DashboardSummary extends DashboardTotals {
   period: DashboardPeriod
-  bucket: 'hour' | 'day'
+  bucket: 'hour' | 'day' | 'month'
+  /** e.g. "FY 2026–27" — null for the short periods */
+  label: string | null
+  /** Start of the period (ISO) */
+  rangeStart: string
   /** Order lines whose cost price couldn't be found — left out of profit */
   profitMissingCost: number
   byChannel: {
@@ -259,12 +270,12 @@ export interface DashboardSummary extends DashboardTotals {
     admin: number
   }
   chartData: Array<{
-    date: string              // IST — "2026-10-28" (day) or "2026-10-28T14" (hour)
+    date: string              // IST — "2026-10-28T14" (hour), "2026-10-28" (day) or "2026-10" (month)
     revenue: number
     netProfit: number | null
   }>
-  /** Same-length period just before, up to the same point in time */
-  previous: DashboardTotals
+  /** Same-length period just before, up to the same point in time — null for lifetime */
+  previous: DashboardTotals | null
   topProducts: Array<{
     productId: string | null
     name: string
@@ -289,6 +300,35 @@ export interface AttentionItem {
   reorderLevel?: number
   expiresAt?: string
   message: string
+}
+
+// ─── Storefront event section ───────────────────────────────────────────────
+
+/** Max products in the event section (matches the API) */
+export const EVENT_SECTION_MAX_PRODUCTS = 12
+
+export interface EventSectionProduct {
+  _id: string
+  name: string
+  brand?: string
+  image: string | null
+  /** false = archived — still saved, but not shown on the storefront */
+  isActive: boolean
+}
+
+export interface EventSection {
+  enabled: boolean
+  title: string
+  subtitle: string
+  products: EventSectionProduct[]
+  updatedAt?: string
+}
+
+export interface EventSectionUpdate {
+  enabled: boolean
+  title: string
+  subtitle: string
+  productIds: string[]
 }
 
 // ─── WhatsApp ────────────────────────────────────────────────────────────────

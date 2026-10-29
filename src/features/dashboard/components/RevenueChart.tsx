@@ -13,15 +13,23 @@ interface Props {
 const REVENUE = 'hsl(var(--primary))'
 const PROFIT  = '#059669'   // tailwind `profit`
 
-/** "2026-10-28" → "28 Oct";  "2026-10-28T14" → "2 PM" (keys are already IST) */
+/** "2026-10-28T14" → "2 PM";  "2026-10-28" → "28 Oct";  "2026-10" → "Oct 26" (keys are already IST) */
 function bucketLabel(key: string, bucket: Props['bucket']) {
   if (bucket === 'hour') {
     const h = Number(key.slice(11, 13))
     return `${h % 12 || 12} ${h < 12 ? 'AM' : 'PM'}`
   }
-  const [y, m, d] = key.split('-').map(Number)
-  return new Intl.DateTimeFormat('en-IN', { day: 'numeric', month: 'short', timeZone: 'UTC' })
-    .format(new Date(Date.UTC(y, m - 1, d)))
+  const [y, m, d = 1] = key.split('-').map(Number)
+  const opts: Intl.DateTimeFormatOptions = bucket === 'month'
+    ? { month: 'short', year: '2-digit', timeZone: 'UTC' }
+    : { day: 'numeric', month: 'short', timeZone: 'UTC' }
+  return new Intl.DateTimeFormat('en-IN', opts).format(new Date(Date.UTC(y, m - 1, d)))
+}
+
+const TITLE: Record<Props['bucket'], string> = {
+  hour:  'Revenue today',
+  day:   'Daily revenue',
+  month: 'Monthly revenue',
 }
 
 export function RevenueChart({ data, bucket, showProfit }: Props) {
@@ -31,7 +39,7 @@ export function RevenueChart({ data, bucket, showProfit }: Props) {
   return (
     <div className="bg-card rounded-2xl border border-border p-4">
       <div className="flex items-center justify-between gap-3 mb-4">
-        <h2 className="text-sm font-semibold">{bucket === 'hour' ? 'Revenue today' : 'Revenue'}</h2>
+        <h2 className="text-sm font-semibold">{TITLE[bucket]}</h2>
         <div className="flex items-center gap-3 text-[11px] text-muted-foreground">
           <Legend color={REVENUE} label="Revenue" />
           {showProfit && <Legend color={PROFIT} label="Profit" />}

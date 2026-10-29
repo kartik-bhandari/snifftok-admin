@@ -12,12 +12,36 @@ import { AttentionPanel } from '@/features/dashboard/components/AttentionPanel'
 import { TopProducts } from '@/features/dashboard/components/TopProducts'
 import { RecentOrders } from '@/features/dashboard/components/RecentOrders'
 import { ChannelSplit } from '@/features/dashboard/components/ChannelSplit'
-import type { DashboardPeriod } from '@/types/api'
+import { formatDate } from '@/lib/date'
+import { formatMoney, formatMoneyCompact } from '@/lib/money'
+import { cn } from '@/lib/utils'
+import type { DashboardPeriod, DashboardSummary } from '@/types/api'
 
-const COMPARE_LABEL: Record<DashboardPeriod, string> = {
+const COMPARE_LABEL: Record<Exclude<DashboardPeriod, 'lifetime'>, string> = {
   today: 'vs yesterday',
   '7d':  'vs prior 7d',
   '30d': 'vs prior 30d',
+  fy:    'vs last FY',
+}
+
+/** Text under each stat — lifetime has no comparison, so show where it starts */
+function compareLabel(s: DashboardSummary) {
+  return s.period === 'lifetime' ? `since ${formatDate(s.rangeStart)}` : COMPARE_LABEL[s.period]
+}
+
+/** ₹10 lakh and up won't fit a stat card — show "₹11.2L" with the full amount on hover */
+const COMPACT_FROM = 10_00_000 * 100   // paise
+
+function StatMoney({ paise, asProfit }: { paise: number; asProfit?: boolean }) {
+  if (Math.abs(paise) < COMPACT_FROM) return <MoneyText paise={paise} asProfit={asProfit} />
+  return (
+    <span
+      title={formatMoney(paise)}
+      className={cn('tabular-nums', asProfit && (paise >= 0 ? 'text-profit' : 'text-destructive'))}
+    >
+      {formatMoneyCompact(paise)}
+    </span>
+  )
 }
 
 function greeting() {
@@ -33,7 +57,7 @@ export default function DashboardPage() {
   const summary   = useDashboardSummary(period)
   const attention = useAttention()
   const s = summary.data
-  const compare = COMPARE_LABEL[period]
+  const compare = s ? compareLabel(s) : ''
   const firstName = user?.name?.split(' ')[0]
 
   return (
@@ -44,7 +68,7 @@ export default function DashboardPage() {
         <div>
           <h1 className="text-2xl font-bold">Dashboard</h1>
           <p className="text-sm text-muted-foreground mt-0.5">
-            {greeting()}{firstName ? `, ${firstName}` : ''}. Here's how the store is doing.
+            {greeting()}{firstName ? `, ${firstName}` : ''}. Here's how the store is doing{s?.period === 'fy' && s.label ? ` in ${s.label}` : ''}.
           </p>
         </div>
         <PeriodTabs value={period} onChange={setPeriod} />
@@ -67,15 +91,15 @@ export default function DashboardPage() {
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
             <StatCard
               label="Revenue"
-              value={<MoneyText paise={s.revenue} />}
-              current={s.revenue} previous={s.previous.revenue}
+              value={<StatMoney paise={s.revenue} />}
+              current={s.revenue} previous={s.previous?.revenue ?? null}
               compareLabel={compare}
             />
             {canSeeCosts && s.netProfit != null ? (
               <StatCard
                 label="Profit"
-                value={<MoneyText paise={s.netProfit} asProfit />}
-                current={s.netProfit} previous={s.previous.netProfit ?? 0}
+                value={<StatMoney paise={s.netProfit} asProfit />}
+                current={s.netProfit} previous={s.previous ? s.previous.netProfit ?? 0 : null}
                 compareLabel={compare}
                 hint={s.profitMissingCost > 0
                   ? `${s.profitMissingCost} item${s.profitMissingCost === 1 ? '' : 's'} missing a cost price`
@@ -85,21 +109,21 @@ export default function DashboardPage() {
               <StatCard
                 label="Units sold"
                 value={s.unitsSold.toLocaleString('en-IN')}
-                current={s.unitsSold} previous={s.previous.unitsSold}
+                current={s.unitsSold} previous={s.previous?.unitsSold ?? null}
                 compareLabel={compare}
               />
             )}
             <StatCard
               label="Orders"
               value={s.orders.toLocaleString('en-IN')}
-              current={s.orders} previous={s.previous.orders}
+              current={s.orders} previous={s.previous?.orders ?? null}
               compareLabel={compare}
               hint={canSeeCosts ? `${s.unitsSold} unit${s.unitsSold === 1 ? '' : 's'} sold` : undefined}
             />
             <StatCard
               label="Avg. order value"
-              value={<MoneyText paise={s.aov} />}
-              current={s.aov} previous={s.previous.aov}
+              value={<StatMoney paise={s.aov} />}
+              current={s.aov} previous={s.previous?.aov ?? null}
               compareLabel={compare}
             />
           </div>
