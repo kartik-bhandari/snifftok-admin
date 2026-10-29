@@ -12,6 +12,7 @@ import WhatsAppInboxPage from '@/pages/WhatsAppInboxPage'
 import CustomersPage from '@/pages/CustomersPage'
 import ReportsPage from '@/pages/ReportsPage'
 import SettingsPage from '@/pages/SettingsPage'
+import EventSectionPage from '@/pages/EventSectionPage'
 
 const router = createBrowserRouter([
   // Public: admin login page
@@ -46,6 +47,7 @@ const router = createBrowserRouter([
             element: <RoleGuard required="admin" />,
             children: [
               { path: '/settings', element: <SettingsPage /> },
+              { path: '/event-section', element: <EventSectionPage /> },
             ],
           },
         ],

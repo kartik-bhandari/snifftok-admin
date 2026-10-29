@@ -1,7 +1,7 @@
 import { NavLink, useLocation } from 'react-router-dom'
 import {
   BarChart2, ShoppingBag, Package, Boxes, MessageCircle,
-  Users, FileText, Settings, Zap, Upload, ChevronRight,
+  Users, FileText, Settings, Zap, Upload, ChevronRight, Megaphone,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useRole } from '@/hooks/useRole'
@@ -86,6 +86,9 @@ export function Sidebar() {
 
         {canSeeReports && (
           <NavGroup title="Insights" items={[{ label: 'Reports', to: '/reports', icon: FileText }]} />
+        )}
+        {canSeeSettings && (
+          <NavGroup title="Storefront" items={[{ label: 'Event Section', to: '/event-section', icon: Megaphone }]} />
         )}
         {canSeeSettings && (
           <NavGroup title="System" items={[{ label: 'Settings', to: '/settings', icon: Settings }]} />

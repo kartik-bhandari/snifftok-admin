@@ -1,5 +1,5 @@
 import { useNavigate } from 'react-router-dom'
-import { Zap, MessageCircle, Users, FileText, Settings, X, LogOut, Upload } from 'lucide-react'
+import { Zap, MessageCircle, Users, FileText, Settings, X, LogOut, Upload, Megaphone } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useRole } from '@/hooks/useRole'
 
@@ -25,6 +25,7 @@ export function MoreSheet({ open, onClose }: Props) {
     { label: 'Customers', to: '/customers', icon: Users, description: 'Browse customer history' },
     { label: 'Bulk Import', to: '/products/import', icon: Upload, description: 'Upload products via CSV' },
     ...(canSeeReports ? [{ label: 'Reports', to: '/reports', icon: FileText, description: 'Sales & profit analytics' }] : []),
+    ...(canSeeSettings ? [{ label: 'Event Section', to: '/event-section', icon: Megaphone, description: 'Festival & offer section on the storefront' }] : []),
     ...(canSeeSettings ? [{ label: 'Settings', to: '/settings', icon: Settings, description: 'Pricing, notifications, staff' }] : []),
   ]
 
