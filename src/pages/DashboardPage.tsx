@@ -10,6 +10,7 @@ import { StatCard } from '@/features/dashboard/components/StatCard'
 import { RevenueChart } from '@/features/dashboard/components/RevenueChart'
 import { AttentionPanel } from '@/features/dashboard/components/AttentionPanel'
 import { TopProducts } from '@/features/dashboard/components/TopProducts'
+import { NotSellingCard } from '@/features/dashboard/components/NotSellingCard'
 import { RecentOrders } from '@/features/dashboard/components/RecentOrders'
 import { ChannelSplit } from '@/features/dashboard/components/ChannelSplit'
 import { formatDate } from '@/lib/date'
@@ -134,6 +135,7 @@ export default function DashboardPage() {
         <div className="xl:col-span-2 space-y-4 min-w-0">
           {s && <RevenueChart data={s.chartData} bucket={s.bucket} showProfit={canSeeCosts && s.netProfit != null} />}
           {s && <TopProducts products={s.topProducts} />}
+          <NotSellingCard showCosts={canSeeCosts} />
         </div>
         <div className="space-y-4 min-w-0">
           <AttentionPanel

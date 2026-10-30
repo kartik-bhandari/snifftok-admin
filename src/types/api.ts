@@ -302,6 +302,90 @@ export interface AttentionItem {
   message: string
 }
 
+// ─── Inventory ───────────────────────────────────────────────────────────────
+
+export type NotSellingDays = 30 | 60 | 90
+
+/** An in-stock variant with no sales in the period */
+export interface NotSellingItem {
+  productId: string
+  variantId: string
+  name: string
+  brand: string | null
+  image: string | null
+  sku: string
+  type: VariantType
+  sizeMl: number
+  available: number           // stock − reserved
+  lastSoldAt: string | null   // null = never sold
+  daysSinceLastSale: number | null
+  stockValue: number | null   // paise, cost × available — null for staff
+}
+
+export interface NotSellingResponse {
+  days: NotSellingDays
+  totals: { variants: number; units: number; stockValue: number | null }
+  items: NotSellingItem[]
+}
+
+export type StockStatus = 'out' | 'low' | 'ok'
+
+/** A variant on the stock overview */
+export interface StockItem {
+  productId: string
+  variantId: string
+  name: string
+  brand: string | null
+  image: string | null
+  sku: string
+  type: VariantType
+  sizeMl: number
+  stock: number
+  reserved: number
+  available: number
+  reorderLevel: number
+  status: StockStatus
+  sold30: number               // units sold in the last 30 days
+  daysOfCover: number | null   // available ÷ avg daily sales; null = no recent sales
+  lastSoldAt: string | null
+  costPrice: number | null     // paise — null for staff
+  stockValue: number | null    // paise, cost × available — null for staff
+}
+
+export interface StockResponse {
+  totals: { variants: number; available: number; reserved: number; low: number; out: number; stockValue: number | null }
+  items: StockItem[]
+}
+
+/** purchase = stock received, returned = customer return, adjustment = correction (±, needs a note) */
+export type AdjustReason = 'purchase' | 'returned' | 'adjustment'
+
+export interface AdjustStockRequest {
+  sku: string
+  delta: number
+  reason: AdjustReason
+  note?: string
+}
+
+export interface StockMovementItem {
+  _id: string
+  sku: string
+  name: string | null
+  type: VariantType | null
+  sizeMl: number | null
+  delta: number
+  field: 'stock' | 'reserved'
+  reason: string
+  note: string | null
+  actor: string
+  createdAt: string
+}
+
+export interface MovementsResponse {
+  items: StockMovementItem[]
+  nextBefore: string | null
+}
+
 // ─── Storefront event section ───────────────────────────────────────────────
 
 /** Max products in the event section (matches the API) */

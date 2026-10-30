@@ -3,6 +3,7 @@ import { productHandlers } from './products'
 import { categoryHandlers } from './categories'
 import { orderHandlers } from './orders'
 import { dashboardHandlers } from './dashboard'
+import { inventoryHandlers } from './inventory'
 
 export const handlers = [
   ...authHandlers,
@@ -10,4 +11,5 @@ export const handlers = [
   ...productHandlers,
   ...orderHandlers,
   ...dashboardHandlers,
+  ...inventoryHandlers,
 ]
