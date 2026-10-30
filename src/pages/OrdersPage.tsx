@@ -8,6 +8,7 @@ import {
 import { apiFetch, apiPatch } from '@/api/client'
 import { cn } from '@/lib/utils'
 import { DASHBOARD_KEY } from '@/hooks/useDashboard'
+import { INVENTORY_KEY } from '@/hooks/useInventory'
 
 // ── Types ──────────────────────────────────────────────────────────────────────
 interface OrderItem {
@@ -113,7 +114,10 @@ function OrderDetailSheet({ order, onClose }: { order: Order; onClose: () => voi
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['admin-orders'] })
       qc.invalidateQueries({ queryKey: [DASHBOARD_KEY] })
+      qc.invalidateQueries({ queryKey: [INVENTORY_KEY] })   // status changes move stock
     },
+    // e.g. reopening a cancelled order when the stock has since sold — keep the old status
+    onError: () => setSelStatus(order.status),
   })
 
   return (
@@ -152,6 +156,12 @@ function OrderDetailSheet({ order, onClose }: { order: Order; onClose: () => voi
               ))}
             </div>
             {updateStatus.isSuccess && <p className="text-[11px] text-emerald-600">✓ Status updated</p>}
+            {updateStatus.isError && (
+              <p className="text-[11px] text-destructive">{(updateStatus.error as Error).message}</p>
+            )}
+            <p className="text-[10px] text-muted-foreground">
+              Confirming takes the reserved stock; cancelling puts it back.
+            </p>
           </div>
 
           {/* Customer */}
