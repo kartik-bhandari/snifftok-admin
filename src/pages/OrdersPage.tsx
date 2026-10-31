@@ -33,6 +33,34 @@ interface Order {
   status: string
   notes?: string
   createdAt: string
+  /** Online payment — missing on orders placed before Razorpay or with payments off */
+  paymentStatus?: 'pending' | 'paid' | 'failed'
+  payment?: {
+    provider?: string
+    razorpayOrderId?: string
+    razorpayPaymentId?: string
+    method?: string
+    paidAt?: string
+    lastError?: string
+    note?: string
+  }
+}
+
+// ── Payment ───────────────────────────────────────────────────────────────────
+const PAYMENT_META: Record<string, { label: string; cls: string }> = {
+  paid:    { label: 'Paid',            cls: 'bg-emerald-50 border-emerald-200 text-emerald-700' },
+  pending: { label: 'Awaiting payment', cls: 'bg-amber-50 border-amber-200 text-amber-700' },
+  failed:  { label: 'Payment failed',  cls: 'bg-red-50 border-red-200 text-red-600' },
+}
+
+function PaymentBadge({ order }: { order: Order }) {
+  if (!order.paymentStatus) return null
+  const meta = PAYMENT_META[order.paymentStatus]
+  return (
+    <span className={cn('inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold border', meta.cls)}>
+      {meta.label}
+    </span>
+  )
 }
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -164,6 +192,34 @@ function OrderDetailSheet({ order, onClose }: { order: Order; onClose: () => voi
             </p>
           </div>
 
+          {/* Payment */}
+          {order.paymentStatus && (
+            <section>
+              <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider mb-2">Payment</p>
+              <div className="rounded-xl border border-border p-4 space-y-1.5 text-sm">
+                <div className="flex items-center justify-between gap-2">
+                  <PaymentBadge order={order} />
+                  <span className="font-semibold">{fmt(order.total)}</span>
+                </div>
+                {order.payment?.method && (
+                  <p className="text-xs text-muted-foreground">Method: <span className="uppercase">{order.payment.method}</span></p>
+                )}
+                {order.payment?.paidAt && (
+                  <p className="text-xs text-muted-foreground">Paid {new Date(order.payment.paidAt).toLocaleString('en-IN', { dateStyle: 'medium', timeStyle: 'short' })}</p>
+                )}
+                {order.payment?.razorpayPaymentId && (
+                  <p className="text-xs text-muted-foreground">Razorpay payment: <span className="font-mono">{order.payment.razorpayPaymentId}</span></p>
+                )}
+                {order.payment?.lastError && order.paymentStatus !== 'paid' && (
+                  <p className="text-xs text-red-600">Last attempt failed: {order.payment.lastError}</p>
+                )}
+                {order.payment?.note && (
+                  <p className="text-xs text-amber-700 bg-amber-50 rounded-lg px-2 py-1.5">{order.payment.note}</p>
+                )}
+              </div>
+            </section>
+          )}
+
           {/* Customer */}
           <section>
             <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider mb-2">Customer</p>
@@ -249,7 +305,10 @@ function OrderRow({ order, onView }: { order: Order; onView: (o: Order) => void 
         <span className="text-xs text-muted-foreground">{order.items.length} item{order.items.length !== 1 ? 's' : ''}</span>
       </td>
       <td className="px-3 py-3">
-        <StatusBadge status={order.status} />
+        <div className="flex flex-wrap gap-1">
+          <StatusBadge status={order.status} />
+          <PaymentBadge order={order} />
+        </div>
       </td>
       <td className="px-3 py-3 text-right">
         <span className="text-sm font-semibold">{fmt(order.total)}</span>
@@ -279,7 +338,10 @@ function OrderCard({ order, onView }: { order: Order; onView: (o: Order) => void
           <p className="font-semibold text-sm">{order.orderNumber}</p>
           <p className="text-xs text-muted-foreground mt-0.5">{order.customer.name} · {order.customer.phone}</p>
         </div>
-        <StatusBadge status={order.status} />
+        <div className="flex flex-wrap gap-1">
+          <StatusBadge status={order.status} />
+          <PaymentBadge order={order} />
+        </div>
       </div>
       <div className="flex items-center justify-between mt-3 pt-3 border-t border-border">
         <span className="text-xs text-muted-foreground">
